@@ -1,4 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.utils import timezone
+from django.db.models import F
 
 
 class WsConsumer(AsyncJsonWebsocketConsumer):
@@ -53,17 +55,41 @@ class WsConsumer(AsyncJsonWebsocketConsumer):
         Called when the websocket is handshaking as part of initial connection.
 
         """
-        print('WS: connect', self.scope.get('user'))
+        user = self.scope.get("user")
+        print('WS: connect', user)
         # Accept the connection
-        if self.scope["user"].is_anonymous:
+        if user.is_anonymous:
             # Reject the connection
             await self.close()
         else:
             # Accept the connection
             await self.accept()
+        user.no_of_connection = F('no_of_connection') + 1
+        user.is_online = True
+        user.save()
 
     async def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
         """
         print('WS: disconnect')
+        user = self.scope.get("user")
+        print(user.no_of_connection)
+        user.no_of_connection = F('no_of_connection') - 1
+        print(user.no_of_connection)
+        user.last_online = timezone.now()
+        user.save()
+
+        # https://simpleisbetterthancomplex.com/tips/2016/08/23/django-tip-13-f-expressions.html
+        user.refresh_from_db()
+        print(user.no_of_connection)
+        save_data = False
+        if user.no_of_connection < 0:
+            user.no_of_connection = 0
+            save_data = True
+        if not user.no_of_connection:
+            user.is_online = False
+            save_data = True
+        print(user.is_online)
+        if save_data:
+            user.save()
