@@ -53,15 +53,14 @@ class WsConsumer(AsyncJsonWebsocketConsumer):
         Called when the websocket is handshaking as part of initial connection.
 
         """
-        print('WS: connect', )
+        print('WS: connect', self.scope.get('user'))
         # Accept the connection
-        await self.accept()
-        # if self.scope["user"].is_anonymous:
-        #     # Reject the connection
-        #     await self.close()
-        # else:
-        #     # Accept the connection
-        #     await self.accept()
+        if self.scope["user"].is_anonymous:
+            # Reject the connection
+            await self.close()
+        else:
+            # Accept the connection
+            await self.accept()
 
     async def disconnect(self, code):
         """

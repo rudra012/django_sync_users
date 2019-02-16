@@ -2,3 +2,5 @@ Django==2.1.7
 channels==2.1.7
 asgi-redis==1.4.3
 asgiref==2.2.0
+djangorestframework==3.9.1
+Pillow==5.4.1

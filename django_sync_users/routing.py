@@ -1,13 +1,15 @@
 # https://channels.readthedocs.io/en/latest/topics/routing.html
-from channels.auth import AuthMiddlewareStack
+# from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter
 from channels.routing import URLRouter
 from django.urls import path
 
 from django_sync_users.consumers import WsConsumer
+from django_sync_users.token_auth import TokenAuthMiddlewareStack
 
+# https://stackoverflow.com/questions/43392889/how-do-you-authenticate-a-websocket-with-token-authentication-on-django-channels
 application = ProtocolTypeRouter({
-    "websocket": AuthMiddlewareStack(
+    "websocket": TokenAuthMiddlewareStack(
         URLRouter([
             # URLRouter just takes standard Django path() or url() entries.
             path("ws_connect/", WsConsumer),
