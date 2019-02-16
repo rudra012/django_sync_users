@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}{% endblock content %}
+
+{% block script %}
+    <script>
+        let new_ws_conn = function () {
+            //ws://localhost:8000/ws_connect/?Token=ebfca23db1ccae30e7b586c56944e89c26a05b5c
+            var socket = new WebSocket('ws://' + window.location.host + '/ws_connect/');
+
+            console.log(socket);
+
+            socket.onopen = function open() {
+                console.log('WebSockets connection created.');
+            };
+            socket.onclose = function open() {
+                console.log('WebSockets connection closed.');
+                setTimeout(function () {
+                    new_ws_conn();
+                }, 5000);
+            };
+            socket.onerror = function open() {
+                console.log('WebSockets connection error.');
+            };
+            socket.onmessage = function open(message) {
+                // Decode the JSON
+                console.log("Got websocket message " + message.data);
+                var data = JSON.parse(message.data);
+                // Handle errors
+                if (data.error) {
+                    alert(data.error);
+                    return
+                }
+                console.log(data)
+            };
+        };
+        new_ws_conn();
+    </script>
+{% endblock script %}
