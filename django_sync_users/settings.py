@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'account',
+    'chat',
     # https://channels.readthedocs.io/en/latest/introduction.html
     'channels',
     # https://www.django-rest-framework.org/
@@ -138,3 +139,7 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# ######## Project-specific settings
+
+NOTIFY_USERS_ON_ENTER_OR_LEAVE_ROOMS = True

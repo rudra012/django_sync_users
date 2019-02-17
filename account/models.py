@@ -8,3 +8,8 @@ class User(AbstractUser):
     is_online = models.BooleanField(default=False)
     no_of_connection = models.PositiveIntegerField(default=0)
     last_online = models.DateTimeField('last online', blank=True, null=True)
+
+    @property
+    def full_name(self):
+        name = " ".join([self.first_name or "", self.last_name or ""])
+        return name
