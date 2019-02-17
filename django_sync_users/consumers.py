@@ -1,3 +1,5 @@
+# https://groups.google.com/forum/#!topic/django-developers/zfkk_nX3C5c
+
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.db.models import F
 from django.utils import timezone
@@ -49,14 +51,21 @@ class WsConsumer(AsyncJsonWebsocketConsumer):
          'websocket_receive']
         '''
     """
+    # Create on group
+    group_name = 'global'
 
     async def connect(self):
         """
         Called when the websocket is handshaking as part of initial connection.
 
+        To send to a single channel, just find its channel name (for the example above, we could crawl the database),
+        and use channel_layer.send:
+        https://channels.readthedocs.io/en/latest/topics/channel_layers.html
         """
         user = self.scope.get("user")
         print('WS: connect', user)
+        # print(self.group_name, self.channel_name)
+        # print(self.channel_layer, self.channel_layer_alias)
         # Accept the connection
         if user.is_anonymous:
             # Reject the connection
@@ -68,12 +77,37 @@ class WsConsumer(AsyncJsonWebsocketConsumer):
         user.is_online = True
         user.save()
 
+        # Add user to Group
+        await self.channel_layer.group_add('user_channel_{}'.format(user.id), self.channel_name)
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+
+        # Send message is group so all channels in that group will get message
+        from channels.layers import get_channel_layer
+
+        channel_layer = get_channel_layer()
+        await channel_layer.group_send(self.group_name, {
+            "type": "chat.join",
+            "text": "Hello there!",
+        })
+
+        # # To send message in single channel
+        # from channels.layers import get_channel_layer
+        #
+        # channel_layer = get_channel_layer()
+        # await channel_layer.send(self.channel_name, {
+        #     "type": "chat.join",
+        #     "text": "Hello there!",
+        # })
+
     async def disconnect(self, code):
         """
         Called when the WebSocket closes for any reason.
         """
         user = self.scope.get("user")
         print('WS: disconnect', user)
+        await self.channel_layer.group_discard('user_channel_{}'.format(user.id), self.channel_name)
+        await self.channel_layer.group_discard(self.group_name, self.channel_name)
+
         user.no_of_connection = F('no_of_connection') - 1
         user.last_online = timezone.now()
         user.save()
@@ -89,3 +123,18 @@ class WsConsumer(AsyncJsonWebsocketConsumer):
             save_data = True
         if save_data:
             user.save()
+
+    # ####### Handlers for messages sent over the channel layer #######
+
+    # These helper methods are named by the types we send - so chat.join becomes chat_join
+    async def chat_join(self, event):
+        """
+        Called when someone has joined our chat.
+        """
+        # Send a message down to the client
+        await self.send_json(
+            {
+                # "msg_type": settings.MSG_TYPE_ENTER,
+                "room": 'test',
+            },
+        )
