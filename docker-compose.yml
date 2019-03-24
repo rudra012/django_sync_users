@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+
+  sockapp:
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Docker/Dockerfile
+    networks:
+      - app-network
+    command: gunicorn --log-level debug --bind 0.0.0.0:8000 django_sync_users.wsgi
+
+  nginxweb:
+    restart: always
+    image: nginx:1.13
+    volumes:
+      - ./Docker/config/nginx/conf.d:/etc/nginx/conf.d
+    ports:
+      - 80:80
+    depends_on:
+      - sockapp
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
