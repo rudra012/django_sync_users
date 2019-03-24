@@ -1,5 +1,6 @@
 FROM python:3.7
 ENV PYTHONUNBUFFERED 1
+ENV REDIS_HOST "redis"
 
 RUN mkdir -p /opt/services/app/src
 RUN mkdir -p /opt/services/app/src/static
